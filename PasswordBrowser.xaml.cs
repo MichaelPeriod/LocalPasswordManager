@@ -10,30 +10,18 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace LocalPasswordManager
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for PasswordBrowser.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class PasswordBrowser : Window
     {
-        public MainWindow()
+        public PasswordBrowser()
         {
             InitializeComponent();
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            //Password verification
-
-            //Pass the key
-            PasswordBrowser pb = new PasswordBrowser();
-            this.Hide();
-            pb.ShowDialog();
-            this.Close();
         }
     }
 }
