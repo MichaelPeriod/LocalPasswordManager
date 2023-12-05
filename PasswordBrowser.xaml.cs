@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,9 +21,13 @@ namespace LocalPasswordManager
     public partial class PasswordBrowser : Window
     {
         int currRowPos = 2;
+        EncryptionHandler handler;
+        readonly String passwordLocation = "./passwords.bin";
         public PasswordBrowser()
         {
             InitializeComponent();
+            handler = new EncryptionHandler();
+            Load_Entries();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -33,7 +38,33 @@ namespace LocalPasswordManager
 
         public void Create_Entry(LoginInformation info)
         {
+            using (FileStream fileStream = new FileStream(passwordLocation, FileMode.Append, FileAccess.Write, FileShare.None))
+            using (BinaryWriter file = new BinaryWriter(fileStream))
+            {
+                file.Write(handler.convertToBytes(info.GetWebsite()));
+                file.Write(handler.convertToBytes(info.GetUsername()));
+                file.Write(handler.convertToBytes(info.GetPassword()));
+            }
             CreateLine(info);
+        }
+
+        private void Load_Entries()
+        {
+            using (FileStream fileStream = new FileStream(passwordLocation, FileMode.Open, FileAccess.Read, FileShare.None))
+            using (BinaryReader file = new BinaryReader(fileStream))
+            {
+                while (file.BaseStream.Position != file.BaseStream.Length)
+                {
+                LoginInformation curr = new LoginInformation(
+                    handler.convertToString(file.ReadBytes(16)),
+                    handler.convertToString(file.ReadBytes(16)),
+                    handler.convertToString(file.ReadBytes(16))
+                            );
+
+                    CreateLine(curr);
+                }
+
+            }
         }
 
         private void CreateLine(LoginInformation _login)
