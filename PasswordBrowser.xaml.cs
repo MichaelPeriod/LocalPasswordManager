@@ -27,9 +27,13 @@ namespace LocalPasswordManager
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            CreateLine(new LoginInformation("abc.com", "user1", "*****"));
-          
-            currRowPos++;
+            NewEntry ne = new NewEntry(this);
+            ne.ShowDialog();
+        }
+
+        public void Create_Entry(LoginInformation info)
+        {
+            CreateLine(info);
         }
 
         private void CreateLine(LoginInformation _login)
@@ -45,6 +49,8 @@ namespace LocalPasswordManager
             passwordgrid.Children.Add(newWebsite);
             passwordgrid.Children.Add(newUser);
             passwordgrid.Children.Add(newPass);
+
+            currRowPos++;
         }
 
         private Label CreateLabel(String text, int gridPosX, int gridPosY)
