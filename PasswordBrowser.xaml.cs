@@ -50,18 +50,21 @@ namespace LocalPasswordManager
 
         private void Load_Entries()
         {
-            using (FileStream fileStream = new FileStream(passwordLocation, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (BinaryReader file = new BinaryReader(fileStream))
+            if (File.Exists(passwordLocation))
             {
-                while (file.BaseStream.Position != file.BaseStream.Length)
+                using (FileStream fileStream = new FileStream(passwordLocation, FileMode.Open, FileAccess.Read, FileShare.None))
+                using (BinaryReader file = new BinaryReader(fileStream))
                 {
-                LoginInformation curr = new LoginInformation(
-                    handler.convertToString(file.ReadBytes(16)),
-                    handler.convertToString(file.ReadBytes(16)),
-                    handler.convertToString(file.ReadBytes(16))
-                            );
+                    while (file.BaseStream.Position != file.BaseStream.Length)
+                    {
+                    LoginInformation curr = new LoginInformation(
+                        handler.convertToString(file.ReadBytes(16)),
+                        handler.convertToString(file.ReadBytes(16)),
+                        handler.convertToString(file.ReadBytes(16))
+                                );
 
-                    CreateLine(curr);
+                        CreateLine(curr);
+                    }
                 }
 
             }
