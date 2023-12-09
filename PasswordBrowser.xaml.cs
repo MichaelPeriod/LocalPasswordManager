@@ -39,11 +39,10 @@ namespace LocalPasswordManager
         public void Create_Entry(LoginInformation info)
         {
             using (FileStream fileStream = new FileStream(passwordLocation, FileMode.Append, FileAccess.Write, FileShare.None))
-            using (BinaryWriter file = new BinaryWriter(fileStream))
+            using (BinaryWriter file = new BinaryWriter(fileStream, Encoding.UTF8, false))
             {
-                file.Write(handler.convertToBytes(info.GetWebsite()));
-                file.Write(handler.convertToBytes(info.GetUsername()));
-                file.Write(handler.convertToBytes(info.GetPassword()));
+                String combinedLogin = info.Website.Trim() + '\0' + info.Username.Trim() + '\0' + info.Password.Trim() + '\0';
+                file.Write(combinedLogin);
             }
             CreateLine(info);
         }
@@ -55,30 +54,50 @@ namespace LocalPasswordManager
                 using (FileStream fileStream = new FileStream(passwordLocation, FileMode.Open, FileAccess.Read, FileShare.None))
                 using (BinaryReader file = new BinaryReader(fileStream))
                 {
+                    int pos = 0;
+                    LoginInformation loginInformation = new LoginInformation();
                     while (file.BaseStream.Position != file.BaseStream.Length)
                     {
-                    LoginInformation curr = new LoginInformation(
-                        handler.convertToString(file.ReadBytes(16)),
-                        handler.convertToString(file.ReadBytes(16)),
-                        handler.convertToString(file.ReadBytes(16))
-                                );
-
-                        CreateLine(curr);
+                        String? currLetter = System.Text.Encoding.UTF8.GetString(file.ReadBytes(1));
+                        if(currLetter != "\0")
+                        {
+                            switch (pos) { 
+                                case 0:
+                                    loginInformation.Website = loginInformation.Website + currLetter;
+                                    break;
+                                case 1:
+                                    loginInformation.Username += currLetter;
+                                    break;
+                                default:
+                                    loginInformation.Password += currLetter;
+                                    break;
+                            }
+                        } else
+                        {
+                            pos++;
+                            if (pos >= 3)
+                            {
+                                CreateLine(loginInformation);
+                                pos = 0;
+                                loginInformation = new LoginInformation();
+                            }
+                        }
+                        
                     }
                 }
 
             }
         }
 
-        private void CreateLine(LoginInformation _login)
+        void CreateLine(LoginInformation _login)
         {
             RowDefinition rd = new RowDefinition();
             rd.Height = new GridLength(50);
             passwordgrid.RowDefinitions.Add(rd);
 
-            Label newWebsite = CreateLabel(_login.GetWebsite(), 1, currRowPos);
-            Label newUser = CreateLabel(_login.GetUsername(), 2, currRowPos);
-            Label newPass = CreateLabel(_login.GetPassword(), 3, currRowPos);
+            Label newWebsite = CreateLabel(_login.Website, 1, currRowPos);
+            Label newUser = CreateLabel(_login.Username, 2, currRowPos);
+            Label newPass = CreateLabel(_login.Password, 3, currRowPos);
 
             passwordgrid.Children.Add(newWebsite);
             passwordgrid.Children.Add(newUser);
@@ -87,7 +106,7 @@ namespace LocalPasswordManager
             currRowPos++;
         }
 
-        private Label CreateLabel(String text, int gridPosX, int gridPosY)
+        Label CreateLabel(String text, int gridPosX, int gridPosY)
         {
             Label label = new Label();
             label.Content = text;

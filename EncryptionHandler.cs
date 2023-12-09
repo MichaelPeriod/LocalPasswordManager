@@ -21,20 +21,20 @@ public class EncryptionHandler
     }
 
     //https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.aes?view=net-8.0
-    static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
+    byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
     {
         byte[] encrypted;
         // Create a new AesManaged.
         
         // Create encryptor
-        ICryptoTransform encryptor = aes.CreateEncryptor(Key, IV);
+        ICryptoTransform _encryptor = encrypter.CreateEncryptor(Key, IV);
         // Create MemoryStream
         using (MemoryStream ms = new MemoryStream())
         {
             // Create crypto stream using the CryptoStream class. This class is the key to encryption
             // and encrypts and decrypts data from any given stream. In this case, we will pass a memory stream
             // to encrypt
-            using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+            using (CryptoStream cs = new CryptoStream(ms, _encryptor, CryptoStreamMode.Write))
             {
                 // Create StreamWriter and write data to a stream
                 using (StreamWriter sw = new StreamWriter(cs))
@@ -42,13 +42,13 @@ public class EncryptionHandler
                 encrypted = ms.ToArray();
                 cs.Flush();
             }
-         }
+          }
         // Return encrypted data
         return encrypted;
     }
 
 
-    static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
+    string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
     {
         string? plaintext = null;
         // Create AesManaged
