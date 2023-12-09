@@ -1,73 +1,67 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 
 public class EncryptionHandler
 {
-    private Aes encrypter;
-
-	public EncryptionHandler()
-	{
-        encrypter = Aes.Create();
-	}
-
-    public byte[] convertToBytes(String toEncrypt)
+    public static byte[] encrypt(String plainText, String password)
     {
-        return EncryptStringToBytes_Aes(toEncrypt, encrypter.Key, encrypter.IV);
-    }
+        byte[] passwordBytes = Encoding.ASCII.GetBytes(password);
+        Aes aes = Aes.Create();
+        aes.Key = SHA256.Create().ComputeHash(passwordBytes);
+        aes.GenerateIV();
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
+        ICryptoTransform enc = aes.CreateEncryptor(aes.Key, aes.IV);
 
-    public String convertToString(byte[] toDecrypt) {
-        return DecryptStringFromBytes_Aes(toDecrypt, encrypter.Key, encrypter.IV);
-    }
-
-    //https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.aes?view=net-8.0
-    byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
-    {
         byte[] encrypted;
-        // Create a new AesManaged.
-        
-        // Create encryptor
-        ICryptoTransform _encryptor = encrypter.CreateEncryptor(Key, IV);
-        // Create MemoryStream
-        using (MemoryStream ms = new MemoryStream())
+
+        using (MemoryStream msEncrypt = new MemoryStream())
         {
-            // Create crypto stream using the CryptoStream class. This class is the key to encryption
-            // and encrypts and decrypts data from any given stream. In this case, we will pass a memory stream
-            // to encrypt
-            using (CryptoStream cs = new CryptoStream(ms, _encryptor, CryptoStreamMode.Write))
+            using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, enc, CryptoStreamMode.Write))
             {
-                // Create StreamWriter and write data to a stream
-                using (StreamWriter sw = new StreamWriter(cs))
-                    sw.Write(plainText);
-                encrypted = ms.ToArray();
-                cs.Flush();
+                using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                {
+                    //Write all data to the stream.
+                    swEncrypt.Write(plainText.ToCharArray());
+                }
+                encrypted = aes.IV.Concat(msEncrypt.ToArray()).ToArray();
             }
-          }
-        // Return encrypted data
+        }
+
         return encrypted;
     }
 
-
-    string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
+    public static String decrypt(byte[] cypherText, String password)
     {
-        string? plaintext = null;
-        // Create AesManaged
-        using (Aes aes = Aes.Create())
+        byte[] passwordBytes = Encoding.ASCII.GetBytes(password);
+        Aes aes = Aes.Create();
+        aes.Key = SHA256.Create().ComputeHash(passwordBytes);
+        aes.GenerateIV();
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
+
+        String decrypted = "";
+
+        byte[] iv = cypherText.Take(16).ToArray();
+        //Need to remove IV from decrypted password consistently
+        ICryptoTransform dec = aes.CreateDecryptor(aes.Key, iv);
+        using (MemoryStream msDecrypt = new MemoryStream(cypherText.Skip(16).ToArray()))
         {
-            // Create a decryptor
-            ICryptoTransform decryptor = aes.CreateDecryptor(Key, IV);
-            // Create the streams used for decryption.
-            using (MemoryStream ms = new MemoryStream(cipherText))
+            using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, dec, CryptoStreamMode.Read))
             {
-                // Create crypto stream
-                using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+                using (StreamReader srDecrypt = new StreamReader(csDecrypt))
                 {
-                    // Read crypto stream
-                    using (StreamReader reader = new StreamReader(cs))
-                        plaintext = reader.ReadToEnd();
+
+                    // Read the decrypted bytes from the decrypting stream
+                    // and place them in a string.
+                    decrypted = srDecrypt.ReadToEnd();
                 }
             }
         }
-        return plaintext;
+
+        return decrypted;
     }
 }

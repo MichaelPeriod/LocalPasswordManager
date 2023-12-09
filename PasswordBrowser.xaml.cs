@@ -42,7 +42,7 @@ namespace LocalPasswordManager
             using (BinaryWriter file = new BinaryWriter(fileStream, Encoding.UTF8, false))
             {
                 String combinedLogin = info.Website.Trim() + '\0' + info.Username.Trim() + '\0' + info.Password.Trim() + '\0';
-                file.Write(combinedLogin);
+                file.Write(EncryptionHandler.encrypt(combinedLogin, "Password1")); //REMOVE HARDCODE PASS
             }
             CreateLine(info);
         }
@@ -52,40 +52,18 @@ namespace LocalPasswordManager
             if (File.Exists(passwordLocation))
             {
                 using (FileStream fileStream = new FileStream(passwordLocation, FileMode.Open, FileAccess.Read, FileShare.None))
-                using (BinaryReader file = new BinaryReader(fileStream))
+                using (BinaryReader file = new BinaryReader(fileStream, Encoding.UTF8, false))
                 {
-                    int pos = 0;
-                    LoginInformation loginInformation = new LoginInformation();
                     while (file.BaseStream.Position != file.BaseStream.Length)
                     {
-                        String? currLetter = System.Text.Encoding.UTF8.GetString(file.ReadBytes(1));
-                        if(currLetter != "\0")
-                        {
-                            switch (pos) { 
-                                case 0:
-                                    loginInformation.Website = loginInformation.Website + currLetter;
-                                    break;
-                                case 1:
-                                    loginInformation.Username += currLetter;
-                                    break;
-                                default:
-                                    loginInformation.Password += currLetter;
-                                    break;
-                            }
-                        } else
-                        {
-                            pos++;
-                            if (pos >= 3)
-                            {
-                                CreateLine(loginInformation);
-                                pos = 0;
-                                loginInformation = new LoginInformation();
-                            }
-                        }
-                        
+                        String text = EncryptionHandler.decrypt(file.ReadBytes(48), "Password1"); //REMOVE HARDCODE PASS
+                        String[] spliced = text.Split('\0');
+                        LoginInformation loginInformation = new LoginInformation(
+                            spliced[0], spliced[1], spliced[2]);
+
+                        CreateLine(loginInformation);
                     }
                 }
-
             }
         }
 
