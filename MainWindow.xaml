@@ -23,7 +23,7 @@
         </Grid.RowDefinitions>
 
         <Label Content="Master Password" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Foreground="White" FontSize="40" VerticalAlignment="Center" HorizontalAlignment="Center"></Label>
-        <TextBox Grid.Row="2" Grid.Column="1" Margin="5" TextWrapping="NoWrap" FontSize="30"></TextBox>
+        <TextBox Grid.Row="2" Grid.Column="1" Margin="5" TextWrapping="NoWrap" FontSize="30" x:Name="passwordtb"></TextBox>
         <Button Content="Enter" Grid.Row="2" Grid.Column="2" FontSize="20" Margin="5,5,5,0" Foreground="White" FontWeight="Bold" Height="40" VerticalAlignment="Top" Click="Button_Click">
             <Button.Style>
                 <Style TargetType="{x:Type Button}">

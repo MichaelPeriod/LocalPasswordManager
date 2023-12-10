@@ -21,12 +21,13 @@ namespace LocalPasswordManager
     public partial class PasswordBrowser : Window
     {
         int currRowPos = 2;
-        EncryptionHandler handler;
         readonly String passwordLocation = "./passwords.bin";
+        public String password { private get; set; }
+
         public PasswordBrowser()
         {
             InitializeComponent();
-            handler = new EncryptionHandler();
+            password = "";
             Load_Entries();
         }
 
@@ -42,7 +43,7 @@ namespace LocalPasswordManager
             using (BinaryWriter file = new BinaryWriter(fileStream, Encoding.UTF8, false))
             {
                 String combinedLogin = info.Website.Trim() + '\0' + info.Username.Trim() + '\0' + info.Password.Trim() + '\0';
-                file.Write(EncryptionHandler.encrypt(combinedLogin, "Password1")); //REMOVE HARDCODE PASS
+                file.Write(EncryptionHandler.encrypt(combinedLogin, password));
             }
             CreateLine(info);
         }
@@ -56,7 +57,7 @@ namespace LocalPasswordManager
                 {
                     while (file.BaseStream.Position != file.BaseStream.Length)
                     {
-                        String text = EncryptionHandler.decrypt(file.ReadBytes(48), "Password1"); //REMOVE HARDCODE PASS
+                        String text = EncryptionHandler.decrypt(file.ReadBytes(48), password);
                         String[] spliced = text.Split('\0');
                         LoginInformation loginInformation = new LoginInformation(
                             spliced[0], spliced[1], spliced[2]);
